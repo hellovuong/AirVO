@@ -14,4 +14,6 @@
       <param name="saving_dir" type="string" value="$(arg saving_dir)" />
       <param name="traj_path" type="string" value="$(arg traj_path)" />
     </node>
+    <!-- Visualization -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find air_vo)/configs/euroc.rviz" output="screen" />
 </launch>		
