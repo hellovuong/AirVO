@@ -17,4 +17,4 @@
 
     <!-- Visualization -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find air_vo)/configs/euroc.rviz" output="screen" />
-</launch>		
+</launch>
