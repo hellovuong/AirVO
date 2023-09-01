@@ -5,6 +5,7 @@
 #include <chrono>
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
+#include "NetVLAD.hpp"
 
 #include "super_point.h"
 #include "super_glue.h"
@@ -114,6 +115,8 @@ private:
   LineDetectorPtr _line_detector;
   RosPublisherPtr _ros_publisher;
   MapPtr _map;
+  std::unique_ptr<netvlad_torch> netvlad_torch_ptr_ {};
+
 };
 
 #endif  // MAP_BUILDER_H_

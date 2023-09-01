@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 project(air_vo)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE "release")
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 add_definitions(-w)
+
+set(LIBTORCH_DIR "/opt/libtorch")
+list(APPEND CMAKE_PREFIX_PATH ${LIBTORCH_DIR})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/Thirdparty/TensorRTBuffer)
 
@@ -30,7 +33,11 @@ find_package(Boost REQUIRED)
 find_package(G2O REQUIRED)
 find_package(Gflags REQUIRED)
 find_package(Glog REQUIRED)
-
+find_package(Torch REQUIRED)
+find_package(torch_cpp REQUIRED)
+IF(TORCH_FOUND)
+  MESSAGE(STATUS "Found Torch: ${TORCH_INCLUDE_DIRS}")
+ENDIF(TORCH_FOUND)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${PROJECT_NAME}_lib
@@ -49,6 +56,8 @@ include_directories(
   ${G2O_INCLUDE_DIR}
   ${GFLAGS_INCLUDE_DIRS} 
   ${GLOG_INCLUDE_DIRS}
+  /home/vuong/Dev/prv/ws/air_ws/devel/include/torch_cpp
+  /opt/libtorch
 )
 
 add_library(${PROJECT_NAME}_lib SHARED
@@ -83,6 +92,8 @@ target_link_libraries(${PROJECT_NAME}_lib
   ${GLOG_LIBRARIES}
   yaml-cpp
   TensorRTBuffer
+  ${TORCH_LIBRARIES}
+  /home/vuong/Dev/prv/ws/air_ws/devel/lib/torch_cpp/libtorch_cpp.so
 )
 
 add_executable(${PROJECT_NAME} main.cpp)

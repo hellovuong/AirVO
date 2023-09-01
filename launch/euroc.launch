@@ -1,6 +1,6 @@
 <launch>
     <arg name="config_path" default = "$(find air_vo)/configs/configs_euroc.yaml" />
-    <arg name="dataroot" default = "/media/xukuan/something2/ubuntu_files/data/euroc/V1_02_medium/mav0" />
+    <arg name="dataroot" default = "/home/vuong/Dev/robotics/datasets/public_data/euroc/V2_02_medium/mav0" />
     <arg name="camera_config_path" default = "$(find air_vo)/configs/euroc.yaml" />
     <arg name="model_dir" default = "$(find air_vo)/output" />
     <arg name="saving_dir" default = "$(find air_vo)/debug" />
@@ -14,4 +14,7 @@
       <param name="saving_dir" type="string" value="$(arg saving_dir)" />
       <param name="traj_path" type="string" value="$(arg traj_path)" />
     </node>
+
+    <!-- Visualization -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find air_vo)/configs/euroc.rviz" output="screen" />
 </launch>		

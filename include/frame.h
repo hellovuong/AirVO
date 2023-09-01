@@ -1,10 +1,13 @@
 #ifndef FRAME_H_
 #define FRAME_H_
 
+#include <c10/core/TensorImpl.h>
 #include <string>
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <opencv2/opencv.hpp>
+
+#include <torch/torch.h>
 
 #include "utils.h"
 #include "mappoint.h"
@@ -110,11 +113,17 @@ public:
   int tracking_frame_id;
   int local_map_optimization_frame_id;
   int local_map_optimization_fix_frame_id;
-
+  cv::Mat img_; // for debugging
+  int similarity_kf_id_ = -1;
   // debug
   std::vector<int> line_left_to_right_match;
   std::vector<std::map<int, double>> relation_left;
   std::vector<std::map<int, double>> relation_right;
+
+  at::Tensor& getGlobalDesc()
+  {
+    return *global_desc_ptr_; 
+  }
 
 private:
   int _frame_id;
@@ -132,6 +141,9 @@ private:
   std::vector<double> _depth;
   std::vector<int> _track_ids;
   std::vector<MappointPtr> _mappoints;
+
+  // global descriptor
+  std::unique_ptr<at::Tensor> global_desc_ptr_ = std::make_unique<at::Tensor>();
 
   // line features
   std::vector<Eigen::Vector4d> _lines;

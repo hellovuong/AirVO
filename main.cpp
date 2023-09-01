@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
   MapBuilder map_builder(configs);
   size_t dataset_length = dataset.GetDatasetLength();
   for(size_t i = 0; i < dataset_length && ros::ok(); ++i){
-    std::cout << "i ===== " << i << std::endl;
     auto before_infer = std::chrono::steady_clock::now();
 
     InputDataPtr input_data = dataset.GetData(i);
@@ -34,7 +33,6 @@ int main(int argc, char **argv) {
 
     auto after_infer = std::chrono::steady_clock::now();
     auto cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(after_infer - before_infer).count();
-    std::cout << "One Frame Processinh Time: " << cost_time << " ms." << std::endl;
   }
   map_builder.ShutDown();
   map_builder.SaveTrajectory(traj_path);

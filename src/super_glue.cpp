@@ -19,6 +19,7 @@ SuperGlue::SuperGlue(const SuperGlueConfig &superglue_config) : superglue_config
 }
 
 bool SuperGlue::build() {
+    std::cout << "start to build superglue engine...\n ";
     if(deserialize_engine()){
         return true;
     }

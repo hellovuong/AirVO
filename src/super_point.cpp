@@ -17,6 +17,7 @@ SuperPoint::SuperPoint(const SuperPointConfig &super_point_config)
 }
 
 bool SuperPoint::build() {
+    std::cout << "start to build superpoint engine...\n ";
     if(deserialize_engine()){
         return true;
     }
