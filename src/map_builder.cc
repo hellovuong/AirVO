@@ -539,7 +539,6 @@ void MapBuilder::InsertKeyframe(FramePtr frame){
     }
   }
 
-   // netvlad_torch_ptr_->transform(frame->img_.clone(), frame->getGlobalDesc());
   // insert keyframe to map
   _map->InsertKeyframe(frame);
   lcd_ptr_->addKeyFrame(frame);

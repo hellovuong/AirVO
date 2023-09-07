@@ -117,7 +117,7 @@ private:
   LineDetectorPtr _line_detector;
   RosPublisherPtr _ros_publisher;
   MapPtr _map;
-  // std::unique_ptr<netvlad_torch> netvlad_torch_ptr_ {};
+
   std::shared_ptr<AirVO::lcd> lcd_ptr_ {};
 
 };
