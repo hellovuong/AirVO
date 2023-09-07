@@ -3,10 +3,11 @@
 
 #include <iostream>
 #include <chrono>
+#include <memory>
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
-#include "NetVLAD.hpp"
 
+#include "lcd.h"
 #include "super_point.h"
 #include "super_glue.h"
 #include "read_configs.h"
@@ -80,6 +81,7 @@ private:
   std::mutex _tracking_mutex;
   std::queue<TrackingDataPtr> _tracking_data_buffer;
   std::thread _tracking_thread;
+  std::thread lcd_thread_;
 
   // gpu mutex
   std::mutex _gpu_mutex;
@@ -115,7 +117,8 @@ private:
   LineDetectorPtr _line_detector;
   RosPublisherPtr _ros_publisher;
   MapPtr _map;
-  std::unique_ptr<netvlad_torch> netvlad_torch_ptr_ {};
+  // std::unique_ptr<netvlad_torch> netvlad_torch_ptr_ {};
+  std::shared_ptr<AirVO::lcd> lcd_ptr_ {};
 
 };
 

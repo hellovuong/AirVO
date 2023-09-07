@@ -8,6 +8,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <string>
 
+#include "lcd.h"
 #include "super_point.h"
 #include "super_glue.h"
 #include "read_configs.h"
@@ -37,8 +38,12 @@ MapBuilder::MapBuilder(Configs& configs): _shutdown(false), _init(false), _track
   _feature_thread = std::thread(boost::bind(&MapBuilder::ExtractFeatureThread, this));
   _tracking_thread = std::thread(boost::bind(&MapBuilder::TrackingThread, this));
 
-  netvlad_torch_ptr_ = std::make_unique<netvlad_torch>("/home/vuong/Dev/prv/torch_test/torch_cpp/data/traced_pytorch_netvlad.pt");
-  assert(netvlad_torch_ptr_ != nullptr);
+  std::string netvlad_model = "/home/vuong/Dev/prv/torch_test/torch_cpp/data/traced_pytorch_netvlad.pt";
+  lcd_ptr_ = std::make_shared<AirVO::lcd>(_map, netvlad_model);
+  
+  lcd_thread_ = std::thread(&AirVO::lcd::mainLoop, lcd_ptr_);
+
+  assert(lcd_ptr_ != nullptr);
   std::cout << "inited MapBuilder" << std::endl;
 }
 
@@ -58,6 +63,7 @@ void MapBuilder::AddInput(InputDataPtr data){
 }
 
 void MapBuilder::ExtractFeatureThread(){
+  std::cout << "start ExtractFeatureThread!" << std::endl;
   while(!_shutdown){
     if(_data_buffer.empty()){
       usleep(2000);
@@ -119,6 +125,7 @@ void MapBuilder::ExtractFeatureThread(){
 }
 
 void MapBuilder::TrackingThread(){
+  std::cout << "start tracking thread!" << std::endl;
   while(!_shutdown){
     if(_tracking_data_buffer.empty()){
       usleep(2000);
@@ -532,33 +539,10 @@ void MapBuilder::InsertKeyframe(FramePtr frame){
     }
   }
 
-   netvlad_torch_ptr_->transform(frame->img_.clone(), frame->getGlobalDesc());
+   // netvlad_torch_ptr_->transform(frame->img_.clone(), frame->getGlobalDesc());
   // insert keyframe to map
   _map->InsertKeyframe(frame);
-  if (frame->similarity_kf_id_ != -1)
-  {
-    auto similar_image = _map->GetFramePtr(frame->similarity_kf_id_)->img_.clone();
-    auto frame_image = frame->img_.clone();
-    assert(!similar_image.empty() && !frame_image.empty());
-    assert(similar_image.rows == frame_image.rows);
-    // Concatenate the images
-    cv::Mat concatenated_img;
-    cv::hconcat(similar_image, frame_image, concatenated_img);
-
-    // Define the text properties
-    std::string text = std::to_string(frame->GetFrameId()) + " - " + std::to_string(_map->GetFramePtr(frame->similarity_kf_id_)->GetFrameId());
-    int fontFace = cv::FONT_HERSHEY_SIMPLEX;
-    double fontScale = 1;
-    int thickness = 2;
-    cv::Point textOrg(50, 200); // Bottom-left corner of the text string in the image
-    cv::Scalar color(0, 255, 0); // Green color
-
-    // Write the text on the image
-    cv::putText(concatenated_img, text, textOrg, fontFace, fontScale, color, thickness);
-
-    // Show the concatenated image
-    cv::imwrite("/home/vuong/Dev/debug.png", concatenated_img);
-  }
+  lcd_ptr_->addKeyFrame(frame);
   // update last keyframe
   _num_since_last_keyframe = 1;
   _ref_keyframe = frame;

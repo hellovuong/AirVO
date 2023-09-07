@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME}_lib SHARED
   src/map.cc
   src/map_builder.cc
   src/timer.cc
+  src/lcd.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib

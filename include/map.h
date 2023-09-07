@@ -40,6 +40,11 @@ public:
       int thr, std::vector<std::pair<int, MappointPtr>>& good_projections);
   void SaveKeyframeTrajectory(std::string save_root);
 
+  void getKeyframe(std::map<int, FramePtr>& out)
+  {
+    out = _keyframes;
+  }
+
 private:
   OptimizationConfig _backend_optimization_config;
   CameraPtr _camera;
