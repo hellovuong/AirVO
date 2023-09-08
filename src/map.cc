@@ -11,12 +11,12 @@
 #include <g2o/types/slam3d_addons/types_slam3d_addons.h>
 
 #include "map.h"
+#include "lcd.h"
 #include "utils.h"
 #include "line_processor.h"
 #include "frame.h"
 #include "g2o_optimization/g2o_optimization.h"
 #include "timer.h"
-#include <NetVLAD.hpp>
 
 Map::Map(OptimizationConfig& backend_optimization_config, CameraPtr camera, RosPublisherPtr ros_publisher):
     _backend_optimization_config(backend_optimization_config), _camera(camera), _ros_publisher(ros_publisher){
@@ -107,22 +107,9 @@ void Map::InsertKeyframe(FramePtr frame){
     LocalMapOptimization(frame);
   }
 
-  double highest_score = 0;
-  for (auto & _keyframe : _keyframes) {
-    if (_keyframe.first == frame_id) {
-      continue;
-    }
-    auto score = netvlad_torch::score(frame->getGlobalDesc(),
-                                      _keyframe.second->getGlobalDesc());
-    if(score > highest_score && score >= 0.6)
-    {
-      highest_score = score;
-      frame->similarity_kf_id_ = _keyframe.first;
-    }
-  }
-  if (highest_score > 0)
+  if (lcd_ptr_)
   {
-    printf("found highest_score: %f\n", highest_score);
+    lcd_ptr_->addKeyFrame(frame);
   }
 }
 

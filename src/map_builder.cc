@@ -39,10 +39,11 @@ MapBuilder::MapBuilder(Configs& configs): _shutdown(false), _init(false), _track
   _tracking_thread = std::thread(boost::bind(&MapBuilder::TrackingThread, this));
 
   std::string netvlad_model = "/home/vuong/Dev/prv/torch_test/torch_cpp/data/traced_pytorch_netvlad.pt";
-  lcd_ptr_ = std::make_shared<AirVO::lcd>(_map, netvlad_model);
-  
-  lcd_thread_ = std::thread(&AirVO::lcd::mainLoop, lcd_ptr_);
+  lcd_ptr_ = std::make_shared<lcd>(_map, netvlad_model);
+  lcd_ptr_->setUpMatcher(configs.superglue_config); 
+  lcd_thread_ = std::thread(&lcd::loop, lcd_ptr_);
 
+  _map->SetLcdModule(lcd_ptr_);
   assert(lcd_ptr_ != nullptr);
   std::cout << "inited MapBuilder" << std::endl;
 }
@@ -232,8 +233,6 @@ void MapBuilder::ExtractFeatureAndMatch(const cv::Mat& image, const Eigen::Matri
     auto point2 = std::chrono::steady_clock::now();
     auto point_time = std::chrono::duration_cast<std::chrono::milliseconds>(point1 - point0).count();
     auto point_match_time = std::chrono::duration_cast<std::chrono::milliseconds>(point2 - point1).count();
-    // std::cout << "One Frame point Time: " << point_time << " ms." << std::endl;
-    // std::cout << "One Frame point match Time: " << point_match_time << " ms." << std::endl;
   };
 
   std::function<void()> extract_line = [&](){
@@ -241,7 +240,6 @@ void MapBuilder::ExtractFeatureAndMatch(const cv::Mat& image, const Eigen::Matri
     _line_detector->LineExtractor(image, lines);
     auto line2 = std::chrono::steady_clock::now();
     auto line_time = std::chrono::duration_cast<std::chrono::milliseconds>(line2 - line1).count();
-    // std::cout << "One Frame line Time: " << line_time << " ms." << std::endl;
   };
 
   auto feature1 = std::chrono::steady_clock::now();
@@ -253,7 +251,6 @@ void MapBuilder::ExtractFeatureAndMatch(const cv::Mat& image, const Eigen::Matri
 
   auto feature2 = std::chrono::steady_clock::now();
   auto feature_time = std::chrono::duration_cast<std::chrono::milliseconds>(feature2 - feature1).count();
-  // std::cout << "One Frame featrue Time: " << feature_time << " ms." << std::endl;
 }
 
 bool MapBuilder::Init(FramePtr frame, cv::Mat& image_left, cv::Mat& image_right){
@@ -541,7 +538,6 @@ void MapBuilder::InsertKeyframe(FramePtr frame){
 
   // insert keyframe to map
   _map->InsertKeyframe(frame);
-  lcd_ptr_->addKeyFrame(frame);
   // update last keyframe
   _num_since_last_keyframe = 1;
   _ref_keyframe = frame;
@@ -683,6 +679,8 @@ void MapBuilder::SaveMap(const std::string& map_root){
 }
 
 void MapBuilder::ShutDown(){
+  lcd_ptr_->shutDown();
+  lcd_thread_.join();
   _shutdown = true;
   _feature_thread.join();
   _tracking_thread.join();

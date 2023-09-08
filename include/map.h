@@ -1,6 +1,7 @@
 #ifndef MAP_H_
 #define MAP_H_
 
+#include <memory>
 #include <opencv2/highgui/highgui.hpp>
 
 #include "read_configs.h"
@@ -11,6 +12,7 @@
 #include "g2o_optimization/types.h"
 #include "ros_publisher.h"
 
+class lcd;
 class Map{
 public:
   Map(OptimizationConfig& backend_optimization_config, CameraPtr camera, RosPublisherPtr ros_publisher);
@@ -40,6 +42,10 @@ public:
       int thr, std::vector<std::pair<int, MappointPtr>>& good_projections);
   void SaveKeyframeTrajectory(std::string save_root);
 
+  void SetLcdModule(std::shared_ptr<lcd> lcd)
+  {
+    lcd_ptr_ = lcd;
+  }
   void getKeyframe(std::map<int, FramePtr>& out)
   {
     out = _keyframes;
@@ -53,6 +59,7 @@ private:
   std::map<int, FramePtr> _keyframes;
   std::vector<int> _keyframe_ids;
   RosPublisherPtr _ros_publisher;
+  std::shared_ptr<lcd> lcd_ptr_ {};
 };
 
 typedef std::shared_ptr<Map> MapPtr;

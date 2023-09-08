@@ -10,14 +10,33 @@ PointMatching::PointMatching(SuperGlueConfig& superglue_config) :superglue(super
 }
 
 int PointMatching::MatchingPoints(const Eigen::Matrix<double, 259, Eigen::Dynamic>& features0, 
-    const Eigen::Matrix<double, 259, Eigen::Dynamic>& features1, std::vector<cv::DMatch>& matches, bool outlier_rejection){
+    const Eigen::Matrix<double, 259, Eigen::Dynamic>& features1, std::vector<cv::DMatch>& matches, bool outlier_rejection, bool debug){
   matches.clear();
+  if(debug)
+  {
+    std::cout << "1" << std::endl;
+  }
   Eigen::Matrix<double, 259, Eigen::Dynamic> norm_features0 = NormalizeKeypoints(features0, _superglue_config.image_width, _superglue_config.image_height);
   Eigen::Matrix<double, 259, Eigen::Dynamic> norm_features1 = NormalizeKeypoints(features1, _superglue_config.image_width, _superglue_config.image_height);
+  if(debug)
+  {
+    std::cout << "2" << std::endl;
+  }
+
   Eigen::VectorXi indices0, indices1;
   Eigen::VectorXd mscores0, mscores1;
+
+  if(debug)
+  {
+    std::cout << "3" << std::endl;
+  }
   superglue.infer(norm_features0, norm_features1, indices0, indices1, mscores0, mscores1);
 
+
+  if(debug)
+  {
+    std::cout << "4" << std::endl;
+  }
   int num_match = 0;
   std::vector<cv::Point2f> points0, points1;
   std::vector<int> point_indexes;
@@ -31,6 +50,10 @@ int PointMatching::MatchingPoints(const Eigen::Matrix<double, 259, Eigen::Dynami
     }
   }
 
+  if(debug)
+  {
+    std::cout << "5" << std::endl;
+  }
   // reject outliers
   if(outlier_rejection){
     std::vector<uchar> inliers;

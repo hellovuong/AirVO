@@ -118,7 +118,7 @@ private:
   RosPublisherPtr _ros_publisher;
   MapPtr _map;
 
-  std::shared_ptr<AirVO::lcd> lcd_ptr_ {};
+  std::shared_ptr<lcd> lcd_ptr_ {};
 
 };
 

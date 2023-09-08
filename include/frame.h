@@ -69,7 +69,11 @@ public:
   bool BackProjectPoint(size_t idx, Eigen::Vector3d& p3D);
   CameraPtr GetCamera();
   void FindNeighborKeypoints(Eigen::Vector3d& p2D, std::vector<int>& indices, double r, bool filter = true) const;
-
+  
+  Eigen::Matrix<double, 259, Eigen::Dynamic> getCopyFeatures()
+  {
+    return _features;
+  }
   
   // line features
   size_t LineNum();
