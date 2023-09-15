@@ -84,6 +84,7 @@ void MapBuilder::ExtractFeatureThread(){
     // construct frame
     FramePtr frame = std::shared_ptr<Frame>(new Frame(frame_id, false, _camera, timestamp));
 
+    frame->img_ = image_left_rect.clone();
     // init
     if(!_init){
       _init = Init(frame, image_left_rect, image_right_rect);
@@ -181,7 +182,6 @@ void MapBuilder::TrackingThread(){
     // SaveTrackingResult(_last_keyimage, image_left, _last_keyframe, frame, matches, _configs.saving_dir);
 
     if(AddKeyframe(ref_keyframe, frame, num_match) && ref_keyframe->GetFrameId() == _last_keyframe->GetFrameId()){
-      frame->img_ = _last_keyimage.clone();
       InsertKeyframe(frame, image_right_rect);
       _last_keyimage = image_left_rect;
     }
@@ -316,7 +316,6 @@ bool MapBuilder::Init(FramePtr frame, cv::Mat& image_left, cv::Mat& image_right)
   }
 
   // add frame and mappoints to map
-  frame->img_ = image_left.clone();
   InsertKeyframe(frame);
   for(MappointPtr mappoint : new_mappoints){
     _map->InsertMappoint(mappoint);
