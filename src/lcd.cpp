@@ -48,7 +48,7 @@ void lcd::loop() {
       }
       auto score = netvlad_torch::score(frm->getGlobalDesc(),
                                         _keyframe.second->getGlobalDesc());
-      if (score > highest_score && score >= 0.6 &&
+      if (score > highest_score && score >= 0.7 &&
           std::abs(frm->GetFrameId() - _keyframe.second->GetFrameId()) >= 20) {
         highest_score = score;
         frm->similarity_kf_id_ = _keyframe.first;
@@ -67,32 +67,15 @@ void lcd::loop() {
       assert(similar_image.rows == frame_image.rows);
 
       std::vector<cv::DMatch> matches;
-      auto frm_feats = frm->getCopyFeatures();
-      std::cout << "frm feats " << frm_feats.cols() << " x " << frm_feats.rows()
-                << std::endl;
-      auto candidate_kf_feats = candidate_kf->getCopyFeatures();
-      std::cout << "candidate frm feats " << candidate_kf_feats.cols() << " x "
-                << candidate_kf_feats.rows() << std::endl;
-
-      gpu_mutex_.lock();
+      auto frm_feats = frm->GetAllFeatures();
+      auto candidate_kf_feats = candidate_kf->GetAllFeatures();
       auto num_matches = matcher_->MatchingPoints(frm_feats, candidate_kf_feats,
-                                                  matches, true, false);
-      gpu_mutex_.unlock();
+                                                  matches, false, false);
 
-      std::vector<cv::KeyPoint> points0, points1;
-      std::vector<int> point_indexes;
-      for (size_t i = 0; i < frm_feats.cols(); i++) {
-        auto kp = cv::KeyPoint(frm_feats(1, i), frm_feats(2, i), 1);
-        points0.emplace_back(kp);
-      }
-
-      for (size_t i = 0; i < candidate_kf_feats.cols(); i++) {
-        auto kp = cv::KeyPoint(candidate_kf_feats(1, i),
-                             candidate_kf_feats(2, i), 1);
-        points1.emplace_back(kp);
-      }
       cv::Mat out;
-      cv::drawMatches(frame_image, points0, similar_image, points1, matches,
+      std::vector<cv::KeyPoint>& kpts = frm->GetAllKeypoints();
+      std::vector<cv::KeyPoint>& last_kpts = candidate_kf->GetAllKeypoints();
+      cv::drawMatches(frame_image, kpts, similar_image, last_kpts, matches,
                       out);
 
       // Write the text on the image
@@ -113,7 +96,9 @@ void lcd::loop() {
       std::cout << "matches between frm and candidate: " << num_matches
                 << std::endl;
       // Show the concatenated image
-      cv::imwrite("/home/vuong/Dev/debug.png", out);
+      cv::imwrite("/home/vuong/Dev/prv/ws/air_ws/src/AirVO/debug_" + std::to_string(frm->GetFrameId()) +
+                      ".png",
+                  out);
     }
   }
 }
