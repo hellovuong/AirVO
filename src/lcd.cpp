@@ -60,45 +60,65 @@ void lcd::loop() {
     }
 
     if (frm->similarity_kf_id_ != -1) {
-      auto candidate_kf = kfs.at(frm->similarity_kf_id_);
-      auto similar_image = candidate_kf->img_.clone();
-      auto frame_image = frm->img_.clone();
-      assert(!similar_image.empty() && !frame_image.empty());
-      assert(similar_image.rows == frame_image.rows);
+        auto candidate_kf = kfs.at(frm->similarity_kf_id_);
+        std::vector<cv::DMatch> matches;
+        auto frm_feats = frm->GetAllFeatures();
+        auto candidate_kf_feats = candidate_kf->GetAllFeatures();
+        auto num_matches = matcher_->MatchingPoints(frm_feats, candidate_kf_feats,
+            matches, false, false);
 
-      std::vector<cv::DMatch> matches;
-      auto frm_feats = frm->GetAllFeatures();
-      auto candidate_kf_feats = candidate_kf->GetAllFeatures();
-      auto num_matches = matcher_->MatchingPoints(frm_feats, candidate_kf_feats,
-                                                  matches, false, false);
+        if (DEBUG)
+        {
+          auto similar_image = candidate_kf->img_.clone();
+          auto frame_image = frm->img_.clone();
+          assert(!similar_image.empty() && !frame_image.empty());
+          assert(similar_image.rows == frame_image.rows);
 
-      cv::Mat out;
-      std::vector<cv::KeyPoint>& kpts = frm->GetAllKeypoints();
-      std::vector<cv::KeyPoint>& last_kpts = candidate_kf->GetAllKeypoints();
-      cv::drawMatches(frame_image, kpts, similar_image, last_kpts, matches,
-                      out);
 
-      // Write the text on the image
-      // Define the text properties
-      std::string text = std::to_string(frm->GetFrameId()) + " - " +
-                         std::to_string(candidate_kf->GetFrameId()) + " - " +
-                         std::to_string(highest_score) + " - " +
-                         std::to_string(num_matches);
+          cv::Mat out;
+          std::vector<cv::KeyPoint>& kpts = frm->GetAllKeypoints();
+          std::vector<cv::KeyPoint>& last_kpts = candidate_kf->GetAllKeypoints();
+          cv::drawMatches(frame_image, kpts, similar_image, last_kpts, matches,
+              out);
 
-      int fontFace = cv::FONT_HERSHEY_SIMPLEX;
-      double fontScale = 1;
-      int thickness = 2;
-      cv::Point textOrg(
-          50, 200); // Bottom-left corner of the text string in the image
-      cv::Scalar color(0, 255, 0); // Green color
+          // Write the text on the image
+          // Define the text properties
+          std::string text = std::to_string(frm->GetFrameId()) + " - " +
+            std::to_string(candidate_kf->GetFrameId()) + " - " +
+            std::to_string(highest_score) + " - " +
+            std::to_string(num_matches);
 
-      cv::putText(out, text, textOrg, fontFace, fontScale, color, thickness);
-      std::cout << "matches between frm and candidate: " << num_matches
-                << std::endl;
-      // Show the concatenated image
-      cv::imwrite("/home/vuong/Dev/prv/ws/air_ws/src/AirVO/debug_" + std::to_string(frm->GetFrameId()) +
-                      ".png",
-                  out);
+          int fontFace = cv::FONT_HERSHEY_SIMPLEX;
+          double fontScale = 1;
+          int thickness = 2;
+          cv::Point textOrg(
+              50, 200); // Bottom-left corner of the text string in the image
+          cv::Scalar color(0, 255, 0); // Green color
+
+          cv::putText(out, text, textOrg, fontFace, fontScale, color, thickness);
+          std::cout << "matches between frm and candidate: " << num_matches
+            << std::endl;
+          // Show the concatenated image
+          cv::imwrite("/home/vuong/Dev/prv/ws/air_ws/src/AirVO/debug_" + std::to_string(frm->GetFrameId()) +
+              ".png",
+              out);
+        }
+
+        std::vector<MappointPtr> matched_mappoints(candidate_kf_feats.cols(), nullptr);
+        
+        for (const auto& match : matches)
+        {
+          int idx_frm = match.queryIdx;
+          int idx_candidate_kf = match.trainIdx; 
+          matched_mappoints[idx_candidate_kf] = candidate_kf->GetMappoint(idx_candidate_kf);
+        }
+        Eigen::Matrix4d pose;
+        std::vector<int> inliers;
+        
+        auto pnp_inliers = SolvePnPWithCV(candidate_kf, matched_mappoints, pose, inliers);
+
+        auto diff = frm->GetPose().inverse() * pose;
+        std::cout << "diff: \n" << diff << std::endl; 
     }
   }
 }
